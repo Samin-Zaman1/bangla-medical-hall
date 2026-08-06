@@ -1,0 +1,437 @@
+// Runtime queries do NOT go through Prisma (see PROJECT_SPEC.md — direct Postgres ports are
+// blocked in this environment; all API routes use the Supabase JS client instead). This schema
+// exists only to generate @prisma/client TypeScript types and for local dev via `db:push`/
+// `db:migrate` where direct Postgres access works. It is a hand-maintained mirror of
+// supabase/migrations/001_initial_schema.sql — there is no automated check that the two agree,
+// so any column/table change must be applied to BOTH files or the generated types will silently
+// lie about what Supabase actually returns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Branch {
+  id      Int     @id @default(autoincrement())
+  name    String
+  address String?
+
+  appUsers        AppUser[]
+  customers       Customer[]
+  batches         Batch[]
+  purchases       Purchase[]
+  sales           Sale[]
+  stockMovements  StockMovement[]
+  productRequests ProductRequest[]
+  wholesaleOrders WholesaleOrder[]
+  purchaseInvoices PurchaseInvoice[]
+
+  @@map("branch")
+}
+
+model AppUser {
+  id        Int      @id @default(autoincrement())
+  branchId  Int?     @map("branch_id")
+  name      String
+  role      UserRole
+  pinHash   String   @map("pin_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  branch              Branch?          @relation(fields: [branchId], references: [id])
+  purchasesLogged     Purchase[]       @relation("PurchaseLoggedBy")
+  salesProcessed      Sale[]           @relation("SaleProcessedBy")
+  discountsApplied    Sale[]           @relation("DiscountAppliedBy")
+  creditPayments      CreditPayment[]
+  stockMovements      StockMovement[]
+  productRequests     ProductRequest[] @relation("ProductRequestByUser")
+  wholesaleOrders     WholesaleOrder[]
+  wholesalerOrdersFulfilled WholesalerOrder[]
+  purchaseInvoicesCreated PurchaseInvoice[]
+
+  @@map("app_user")
+}
+
+model Customer {
+  id            Int      @id @default(autoincrement())
+  branchId      Int?     @map("branch_id")
+  name          String
+  phone         String?
+  address       String?
+  creditBalance Decimal  @default(0) @map("credit_balance") @db.Decimal(12, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  branch          Branch?          @relation(fields: [branchId], references: [id])
+  sales           Sale[]
+  creditPayments  CreditPayment[]
+  productRequests ProductRequest[] @relation("ProductRequestByCustomer")
+  wholesaleOrders WholesaleOrder[]
+
+  @@map("customer")
+}
+
+model Supplier {
+  id           Int     @id @default(autoincrement())
+  name         String
+  contactInfo  String? @map("contact_info")
+  paymentTerms String? @map("payment_terms")
+
+  batches          Batch[]
+  purchases        Purchase[]
+  supplierProducts SupplierProduct[]
+
+  @@map("supplier")
+}
+
+model SupplierProduct {
+  id         Int      @id @default(autoincrement())
+  supplierId Int      @map("supplier_id")
+  productId  Int      @map("product_id")
+  costPrice  Decimal? @map("cost_price") @db.Decimal(10, 2)
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@unique([supplierId, productId])
+  @@map("supplier_product")
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  genericName   String   @map("generic_name")
+  brandName     String?  @map("brand_name")
+  manufacturer  String?
+  form          String?
+  strength      String?
+  isControlled  Boolean  @default(false) @map("is_controlled")
+  salePrice     Decimal  @map("sale_price") @db.Decimal(10, 2)
+  wholesalePrice Decimal? @map("wholesale_price") @db.Decimal(10, 2)
+  reorderThreshold Int   @default(10) @map("reorder_threshold")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  batches                 Batch[]
+  controlledSubstanceLogs ControlledSubstanceLog[]
+  supplierProducts        SupplierProduct[]
+  purchaseItems           PurchaseItem[]
+  wholesaleOrderItems     WholesaleOrderItem[]
+  wholesalerOrderItems    WholesalerOrderItem[]
+  purchaseInvoiceItems    PurchaseInvoiceItem[]
+
+  @@map("product")
+}
+
+model Batch {
+  id          Int       @id @default(autoincrement())
+  branchId    Int?      @map("branch_id")
+  productId   Int?      @map("product_id")
+  supplierId  Int?      @map("supplier_id")
+  batchNumber String?   @map("batch_number")
+  expiryDate  DateTime? @map("expiry_date") @db.Date
+  costPrice   Decimal?  @map("cost_price") @db.Decimal(10, 2)
+  quantity    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  branch         Branch?         @relation(fields: [branchId], references: [id])
+  product        Product?        @relation(fields: [productId], references: [id])
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id])
+  purchaseItems  PurchaseItem[]
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+
+  @@map("batch")
+}
+
+model Purchase {
+  id            Int             @id @default(autoincrement())
+  branchId      Int?            @map("branch_id")
+  supplierId    Int?            @map("supplier_id")
+  date          DateTime        @default(now()) @db.Date
+  totalAmount   Decimal?        @map("total_amount") @db.Decimal(12, 2)
+  paymentStatus PaymentStatus?  @map("payment_status") @default(due)
+  orderStatus   PurchaseOrderStatus @default(pending) @map("order_status")
+  loggedById    Int?            @map("logged_by")
+
+  branch       Branch?        @relation(fields: [branchId], references: [id])
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id])
+  loggedBy     AppUser?       @relation("PurchaseLoggedBy", fields: [loggedById], references: [id])
+  purchaseItems PurchaseItem[]
+
+  @@map("purchase")
+}
+
+model PurchaseItem {
+  id         Int      @id @default(autoincrement())
+  purchaseId Int?     @map("purchase_id")
+  productId  Int?     @map("product_id")
+  batchId    Int?     @map("batch_id")
+  quantity   Int
+  costPrice  Decimal? @map("cost_price") @db.Decimal(10, 2)
+
+  purchase Purchase? @relation(fields: [purchaseId], references: [id])
+  product  Product?  @relation(fields: [productId], references: [id])
+  batch    Batch?    @relation(fields: [batchId], references: [id])
+
+  @@map("purchase_item")
+}
+
+model Sale {
+  id                 Int            @id @default(autoincrement())
+  branchId           Int?           @map("branch_id")
+  userId             Int?           @map("user_id")
+  customerId         Int?           @map("customer_id")
+  timestamp          DateTime       @default(now())
+  subtotal           Decimal        @db.Decimal(12, 2)
+  discountAmount     Decimal        @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  discountAppliedById Int?          @map("discount_applied_by")
+  totalAmount        Decimal        @map("total_amount") @db.Decimal(12, 2)
+  paymentMethod      PaymentMethod? @map("payment_method")
+  receiptNumber      String?        @unique @map("receipt_number")
+
+  branch                  Branch?                  @relation(fields: [branchId], references: [id])
+  user                    AppUser?                 @relation("SaleProcessedBy", fields: [userId], references: [id])
+  customer                Customer?                @relation(fields: [customerId], references: [id])
+  discountAppliedBy       AppUser?                 @relation("DiscountAppliedBy", fields: [discountAppliedById], references: [id])
+  saleItems               SaleItem[]
+  controlledSubstanceLogs ControlledSubstanceLog[]
+  wholesaleOrder          WholesaleOrder?
+  wholesalerOrders        WholesalerOrder[]
+
+  @@map("sale")
+}
+
+model SaleItem {
+  id          Int     @id @default(autoincrement())
+  saleId      Int?    @map("sale_id")
+  batchId     Int?    @map("batch_id")
+  quantity    Int
+  priceAtSale Decimal @map("price_at_sale") @db.Decimal(10, 2)
+
+  sale  Sale?  @relation(fields: [saleId], references: [id])
+  batch Batch? @relation(fields: [batchId], references: [id])
+
+  @@map("sale_item")
+}
+
+model CreditPayment {
+  id         Int      @id @default(autoincrement())
+  customerId Int?     @map("customer_id")
+  amount     Decimal  @db.Decimal(10, 2)
+  date       DateTime @default(now()) @db.Date
+  userId     Int?     @map("user_id")
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+  user     AppUser?  @relation(fields: [userId], references: [id])
+
+  @@map("credit_payment")
+}
+
+model StockMovement {
+  id        Int               @id @default(autoincrement())
+  branchId  Int?              @map("branch_id")
+  batchId   Int?              @map("batch_id")
+  type      StockMovementType
+  quantity  Int
+  reason    String?
+  userId    Int?              @map("user_id")
+  timestamp DateTime          @default(now())
+
+  branch Branch?  @relation(fields: [branchId], references: [id])
+  batch  Batch?   @relation(fields: [batchId], references: [id])
+  user   AppUser? @relation(fields: [userId], references: [id])
+
+  @@map("stock_movement")
+}
+
+model ControlledSubstanceLog {
+  id        Int      @id @default(autoincrement())
+  saleId    Int?     @map("sale_id")
+  productId Int?     @map("product_id")
+  quantity  Int
+  timestamp DateTime @default(now())
+
+  sale    Sale?    @relation(fields: [saleId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("controlled_substance_log")
+}
+
+model ProductRequest {
+  id                     Int                  @id @default(autoincrement())
+  branchId               Int?                 @map("branch_id")
+  productName            String               @map("product_name")
+  requestedByType        ProductRequesterType @map("requested_by_type")
+  requestedByCustomerId  Int?                 @map("requested_by_customer_id")
+  requestedByUserId      Int?                 @map("requested_by_user_id")
+  quantityNeeded         Int?                 @map("quantity_needed")
+  status                 ProductRequestStatus @default(pending)
+  notes                  String?
+  timestamp              DateTime             @default(now())
+
+  branch                Branch?   @relation(fields: [branchId], references: [id])
+  requestedByCustomer   Customer? @relation("ProductRequestByCustomer", fields: [requestedByCustomerId], references: [id])
+  requestedByUser       AppUser?  @relation("ProductRequestByUser", fields: [requestedByUserId], references: [id])
+
+  @@map("product_request")
+}
+
+model WholesaleOrder {
+  id            Int                  @id @default(autoincrement())
+  branchId      Int?                 @map("branch_id")
+  customerId    Int?                 @map("customer_id")
+  status        WholesaleOrderStatus @default(pending)
+  totalAmount   Decimal              @default(0) @map("total_amount") @db.Decimal(12, 2)
+  saleId        Int?                 @unique @map("sale_id")
+  createdById   Int?                 @map("created_by")
+  paymentMethod PaymentMethod?       @map("payment_method")
+  createdAt     DateTime?            @default(now()) @map("created_at")
+  preparedAt    DateTime?            @map("prepared_at")
+  paidAt        DateTime?            @map("paid_at")
+
+  branch    Branch?              @relation(fields: [branchId], references: [id])
+  customer  Customer?            @relation(fields: [customerId], references: [id])
+  sale      Sale?                @relation(fields: [saleId], references: [id])
+  createdBy AppUser?             @relation(fields: [createdById], references: [id])
+  items     WholesaleOrderItem[]
+
+  @@map("wholesale_order")
+}
+
+model WholesaleOrderItem {
+  id               Int    @id @default(autoincrement())
+  wholesaleOrderId Int?   @map("wholesale_order_id")
+  productId        Int?   @map("product_id")
+  quantity         Int
+  unitPrice        Decimal @map("unit_price") @db.Decimal(10, 2)
+
+  wholesaleOrder WholesaleOrder? @relation(fields: [wholesaleOrderId], references: [id])
+  product        Product?        @relation(fields: [productId], references: [id])
+
+  @@map("wholesale_order_item")
+}
+
+model Wholesaler {
+  id           Int      @id @default(autoincrement())
+  shopName     String   @map("shop_name")
+  phone        String?
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  orders WholesalerOrder[]
+
+  @@map("wholesaler")
+}
+
+model WholesalerOrder {
+  id           Int       @id @default(autoincrement())
+  wholesalerId Int       @map("wholesaler_id")
+  status       String    @default("pending")
+  totalAmount  Decimal   @default(0) @map("total_amount") @db.Decimal(12, 2)
+  saleId       Int?      @map("sale_id")
+  fulfilledById Int?     @map("fulfilled_by")
+  createdAt    DateTime? @default(now()) @map("created_at")
+  fulfilledAt  DateTime? @map("fulfilled_at")
+
+  wholesaler  Wholesaler            @relation(fields: [wholesalerId], references: [id])
+  sale        Sale?                 @relation(fields: [saleId], references: [id])
+  fulfilledBy AppUser?              @relation(fields: [fulfilledById], references: [id])
+  items       WholesalerOrderItem[]
+
+  @@map("wholesaler_order")
+}
+
+model WholesalerOrderItem {
+  id                Int     @id @default(autoincrement())
+  wholesalerOrderId Int     @map("wholesaler_order_id")
+  productId         Int     @map("product_id")
+  quantity          Int
+  unitPrice         Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal          Decimal @db.Decimal(12, 2)
+  fulfilledQuantity Int     @default(0) @map("fulfilled_quantity")
+
+  wholesalerOrder WholesalerOrder @relation(fields: [wholesalerOrderId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id])
+
+  @@map("wholesaler_order_item")
+}
+
+model PurchaseInvoice {
+  id              Int       @id @default(autoincrement())
+  branchId        Int?      @map("branch_id")
+  supplierName    String?   @map("supplier_name")
+  invoiceImageUrl String    @map("invoice_image_url")
+  status          String    @default("draft")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  createdById     Int?      @map("created_by")
+
+  branch    Branch?               @relation(fields: [branchId], references: [id])
+  createdBy AppUser?              @relation(fields: [createdById], references: [id])
+  items     PurchaseInvoiceItem[]
+
+  @@map("purchase_invoice")
+}
+
+model PurchaseInvoiceItem {
+  id                Int     @id @default(autoincrement())
+  purchaseInvoiceId Int     @map("purchase_invoice_id")
+  productId         Int?    @map("product_id")
+  rawExtractedName  String? @map("raw_extracted_name")
+  quantity          Int
+  unitCost          Decimal? @map("unit_cost") @db.Decimal(10, 2)
+  matched           Boolean @default(false)
+
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+  product         Product?        @relation(fields: [productId], references: [id])
+
+  @@map("purchase_invoice_item")
+}
+
+enum UserRole {
+  owner
+  staff
+}
+
+enum PurchaseOrderStatus {
+  pending
+  delivered
+  cancelled
+}
+
+enum WholesaleOrderStatus {
+  pending
+  prepared
+  paid
+  cancelled
+}
+
+enum PaymentStatus {
+  paid
+  due
+}
+
+enum PaymentMethod {
+  cash
+  bkash
+  nagad
+  credit
+}
+
+enum StockMovementType {
+  in
+  out
+  adjustment
+}
+
+enum ProductRequesterType {
+  customer
+  staff
+}
+
+enum ProductRequestStatus {
+  pending
+  fulfilled
+  rejected
+}

@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f7f7;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --border: #e4e4e7;
+  --input: #d4d4d8;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-foreground: #ffffff;
+  --accent: #ecfdf5;
+  --accent-foreground: #065f46;
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --success-soft: #d1fae5;
+  --success-soft-foreground: #065f46;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fef3c7;
+  --warning-soft-foreground: #92400e;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #fee2e2;
+  --destructive-soft-foreground: #991b1b;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card: #1a1a1d;
+  --card-foreground: #ededed;
+  --border: #29292d;
+  --input: #3f3f46;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --primary: #10b981;
+  --primary-hover: #34d399;
+  --primary-foreground: #052e21;
+  --accent: #064e3b;
+  --accent-foreground: #d1fae5;
+  --success: #10b981;
+  --success-foreground: #052e21;
+  --success-soft: #064e3b;
+  --success-soft-foreground: #6ee7b7;
+  --warning: #f59e0b;
+  --warning-foreground: #451a03;
+  --warning-soft: #451a03;
+  --warning-soft-foreground: #fcd34d;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+  --destructive-soft: #450a0a;
+  --destructive-soft-foreground: #fca5a5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-foreground: var(--destructive-soft-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
