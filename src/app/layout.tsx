@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pharmacy POS",
+  title: "Bangla Medical Hall",
   description: "POS and inventory management for pharmacy shops",
 };
 

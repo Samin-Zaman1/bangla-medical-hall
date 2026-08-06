@@ -5,7 +5,7 @@ import { WholesalerAuthShell } from "@/components/wholesaler/auth-shell";
 import { WholesalerLoginForm } from "@/components/wholesaler/login-form";
 
 export const metadata: Metadata = {
-  title: "Wholesaler Login — Pharmacy POS",
+  title: "Wholesaler Login — Bangla Medical Hall",
 };
 
 export default async function WholesalerLoginPage() {

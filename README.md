@@ -1,4 +1,4 @@
-# Pharmacy POS & Inventory
+# Bangla Medical Hall
 
 Web-based POS and inventory system for a single pharmacy shop (Bangladesh). Built with Next.js, PostgreSQL (Supabase), and Prisma.
 

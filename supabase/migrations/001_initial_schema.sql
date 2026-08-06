@@ -1,4 +1,4 @@
--- Pharmacy POS & Inventory — initial schema (from PROJECT_SPEC.md)
+-- Bangla Medical Hall — initial schema (from PROJECT_SPEC.md)
 --
 -- This is the real runtime schema (queried via the Supabase JS client, see
 -- src/lib/supabase/server.ts). prisma/schema.prisma is a hand-maintained mirror used only to

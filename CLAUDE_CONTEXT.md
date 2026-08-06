@@ -1,4 +1,4 @@
-# Claude handoff context for Pharmacy POS
+# Claude handoff context for Bangla Medical Hall
 
 ## Project summary
 This project is a Next.js 16 app using the App Router and TypeScript. The runtime data layer uses Supabase over HTTPS. The app currently has a working MVP foundation for auth, role-based access, products, and basic sales.

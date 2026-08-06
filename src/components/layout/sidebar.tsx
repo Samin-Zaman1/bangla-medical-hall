@@ -80,7 +80,7 @@ export function Sidebar({ navItems, user }: { navItems: NavItem[]; user: Sidebar
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight text-foreground">Pharmacy POS</p>
+              <p className="truncate text-sm font-semibold leading-tight text-foreground">Bangla Medical Hall</p>
               <p className="truncate text-xs text-muted-foreground">
                 {user.name} · {user.role}
               </p>

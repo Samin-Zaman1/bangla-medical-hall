@@ -23,7 +23,7 @@ export function WholesalerAuthShell({
           <div className="flex size-10 items-center justify-center rounded-xl bg-white/15">
             <Warehouse className="size-5" />
           </div>
-          <span className="text-lg font-semibold">Pharmacy POS · Wholesale</span>
+          <span className="text-lg font-semibold">Bangla Medical Hall · Wholesale</span>
         </div>
 
         <div className="space-y-6">

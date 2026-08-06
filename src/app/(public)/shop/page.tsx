@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ShopCatalog } from "@/components/shop/shop-catalog";
 
 export const metadata: Metadata = {
-  title: "Shop — Pharmacy POS",
+  title: "Shop — Bangla Medical Hall",
 };
 
 export default function ShopPage() {

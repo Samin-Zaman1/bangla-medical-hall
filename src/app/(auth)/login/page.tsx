@@ -10,7 +10,7 @@ export default function LoginPage() {
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-sm">
             <Pill className="size-7" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Pharmacy POS</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Bangla Medical Hall</h1>
           <p className="text-sm text-muted-foreground">Sign in with your PIN</p>
         </div>
         <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>

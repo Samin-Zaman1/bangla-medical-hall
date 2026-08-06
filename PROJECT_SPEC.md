@@ -1,4 +1,4 @@
-# Pharmacy POS & Inventory — Project Specification
+# Bangla Medical Hall — Project Specification
 
 ## Database access architecture
 
