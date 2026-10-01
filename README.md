@@ -1,6 +1,30 @@
 # Bangla Medical Hall
 
-Web-based POS and inventory system for a single pharmacy shop (Bangladesh). Built with Next.js, PostgreSQL (Supabase), and Prisma.
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+
+Web-based point-of-sale and inventory system for a single pharmacy shop in Bangladesh. Built with Next.js, PostgreSQL (Supabase), and Prisma.
+
+## The problem
+
+Small pharmacies often run on paper: expiry dates are tracked by memory, customer credit (*baki*) lives in a notebook, and the owner can't see what's selling without counting shelves. This app replaces that with a system built around how the shop actually works.
+
+## Features
+
+- **Sales / POS**: sale flow with discounts, printable receipts and sales history
+- **Batch-level inventory**: stock tracked per batch so expiry and cost stay accurate, plus stock adjustments
+- **Credit (baki) tracking**: credit sales need approval; customer balances and repayments are recorded
+- **Purchases & suppliers**: supplier catalogs, purchase orders and stock-in
+- **AI invoice extraction**: photograph a supplier invoice, Claude extracts the line items, and staff match them to products and confirm before stock changes
+- **Wholesaler portal**: wholesalers register, browse a catalog and place orders
+- **Product requests**: staff log items customers asked for that aren't stocked
+- **Owner reports**: sales and stock reporting, limited to the owner role
+- **Role-based access**: PIN login with an owner/staff permission matrix (`src/lib/permissions.ts`) checked on API routes
+
+## Product decisions
+
+- **Phased delivery**: highest-value workflows first (sell → restock → credit → reports). See [Build phases](#build-phases).
+- **Human review before AI writes data**: extracted invoice items land as a draft for staff to confirm. Model output is treated as untrusted, and malformed results are dropped instead of failing the request.
+- **Supabase over HTTPS**: the shop's network blocks direct Postgres ports, so runtime data access goes through the Supabase client on port 443 (see `PROJECT_SPEC.md`).
 
 ## Setup
 
