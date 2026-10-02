@@ -21,6 +21,12 @@ export async function hasExistingUsers(): Promise<boolean> {
     .from("app_user")
     .select("id", { count: "exact", head: true });
 
-  if (error) throw error;
+  if (error) {
+    // Supabase errors are plain objects; wrap so the dev overlay/logs show the actual cause.
+    throw new Error(
+      `Supabase query failed: ${error.message}${error.details ? ` (${error.details.split("\n")[0]})` : ""}`,
+      { cause: error },
+    );
+  }
   return (count ?? 0) > 0;
 }

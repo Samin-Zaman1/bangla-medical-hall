@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Label } from "@/components/ui/input";
 
+// Larger-than-default fields for the login screen (`!` overrides the base field classes).
+const bigField = "h-14 rounded-xl! px-4!";
+
 type LoginUser = {
   id: number;
   name: string;
@@ -67,15 +70,15 @@ export function LoginForm() {
   }
 
   if (loadingUsers) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <p className="text-base text-muted-foreground">Loading…</p>;
   }
 
   if (users.length === 0) {
     return (
-      <div className="space-y-3 text-sm text-muted-foreground">
+      <div className="space-y-4 text-base text-muted-foreground">
         <p>No users found yet.</p>
         <a href="/setup">
-          <Button type="button" className="w-full">
+          <Button type="button" size="lg" className="w-full rounded-xl!">
             Set up your pharmacy
           </Button>
         </a>
@@ -84,14 +87,17 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5 text-left">
-        <Label htmlFor="user">User</Label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2 text-left">
+        <Label htmlFor="user" className="text-base!">
+          User
+        </Label>
         <Select
           id="user"
           value={userId}
           onChange={(e) => setUserId(Number(e.target.value))}
           required
+          className={`${bigField} text-base!`}
         >
           <option value="" disabled>
             Select user
@@ -104,8 +110,10 @@ export function LoginForm() {
         </Select>
       </div>
 
-      <div className="space-y-1.5 text-left">
-        <Label htmlFor="pin">PIN</Label>
+      <div className="space-y-2 text-left">
+        <Label htmlFor="pin" className="text-base!">
+          PIN
+        </Label>
         <Input
           id="pin"
           type="password"
@@ -115,18 +123,18 @@ export function LoginForm() {
           onChange={(e) => setPin(e.target.value)}
           required
           minLength={4}
-          className="tracking-widest"
+          className={`${bigField} text-2xl! tracking-[0.5em]`}
           placeholder="••••"
         />
       </div>
 
       {error && (
-        <p className="text-left text-sm text-destructive" role="alert">
+        <p className="rounded-xl bg-destructive-soft px-4 py-3 text-left text-sm text-destructive-soft-foreground" role="alert">
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={loading || userId === ""} className="w-full">
+      <Button type="submit" size="lg" disabled={loading || userId === ""} className="w-full rounded-xl!">
         {loading ? "Signing in…" : "Sign in"}
       </Button>
     </form>

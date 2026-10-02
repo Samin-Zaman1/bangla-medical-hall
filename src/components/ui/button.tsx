@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "outline" | "ghost" | "destructive" | "success";
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 };
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
@@ -16,6 +16,7 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
 const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
   sm: "px-2.5 py-1 text-xs",
   md: "px-4 py-2 text-sm",
+  lg: "px-5 py-3.5 text-base",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

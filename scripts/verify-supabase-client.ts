@@ -54,7 +54,10 @@ async function main() {
   if (error) {
     console.error("Supabase client verification failed.");
     console.error(JSON.stringify({
-      message: error instanceof Error ? error.message : String(error),
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
     }, null, 2));
     process.exit(1);
   }
