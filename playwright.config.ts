@@ -32,7 +32,8 @@ export default defineConfig({
   retries: CI ? 2 : 0,
   workers: CI ? 2 : undefined,
   timeout: 45_000,
-  expect: { timeout: 10_000 },
+  // Local runs use `next dev`, which compiles each route on first request; allow for that.
+  expect: { timeout: CI ? 10_000 : 20_000 },
   reporter: CI
     ? [
         ["github"],

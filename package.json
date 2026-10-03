@@ -30,7 +30,8 @@
     "db:seed:demo": "tsx scripts/seed-demo-data.ts",
     "postinstall": "prisma generate",
     "verify:db": "tsx scripts/verify-supabase.ts",
-    "verify:supabase": "tsx scripts/verify-supabase-client.ts"
+    "verify:supabase": "tsx scripts/verify-supabase-client.ts",
+    "screenshots": "tsx scripts/capture-screenshots.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
