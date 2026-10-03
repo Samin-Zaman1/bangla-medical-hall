@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-full flex-1 bg-background lg:grid-cols-[1.1fr_1fr]">
       {/* Brand panel */}
-      <section className="relative hidden overflow-hidden bg-gradient-to-br from-[#14532D] via-[#1F7A4D] to-[#059669] p-12 text-white lg:flex lg:flex-col">
+      <section className="relative hidden overflow-hidden bg-gradient-to-br from-[#14532D] via-[#1F7A4D] to-[#047857] p-12 text-white lg:flex lg:flex-col">
         {decorations.map(({ icon: Icon, className }, i) => (
           <Icon key={i} aria-hidden className={`pointer-events-none absolute text-white/10 ${className}`} />
         ))}

@@ -11,16 +11,17 @@
   --input: #d4d4d8;
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
-  --primary: #059669;
-  --primary-hover: #047857;
+  /* emerald-700: 5.5:1 against white, so it passes WCAG AA as text and as a button fill. */
+  --primary: #047857;
+  --primary-hover: #065f46;
   --primary-foreground: #ffffff;
   --accent: #ecfdf5;
   --accent-foreground: #065f46;
-  --success: #059669;
+  --success: #047857;
   --success-foreground: #ffffff;
   --success-soft: #d1fae5;
   --success-soft-foreground: #065f46;
-  --warning: #d97706;
+  --warning: #b45309;
   --warning-foreground: #ffffff;
   --warning-soft: #fef3c7;
   --warning-soft-foreground: #92400e;
