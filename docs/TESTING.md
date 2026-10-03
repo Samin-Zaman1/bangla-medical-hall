@@ -64,7 +64,6 @@ turn it into a normal test.
 
 | Issue | Test |
 | --- | --- |
-| `wholesaler` table has no RLS — readable with the public anon key | `tests/db/schema.test.ts` (fails outright, not suppressed) |
 | Dashboard isn't responsive: on phones the sidebar covers the till | `tests/e2e/sales.spec.ts` (mobile project) |
 | Brand green `#059669` is 3.76:1 on white (AA needs 4.5:1) | `tests/e2e/a11y.spec.ts` |
 | `/reports` has no page-level permission check | `tests/e2e/permissions.spec.ts` |
