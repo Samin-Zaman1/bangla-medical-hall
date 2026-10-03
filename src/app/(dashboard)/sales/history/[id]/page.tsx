@@ -58,6 +58,9 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
     notFound();
   }
 
+  // sale.timestamp is naive UTC; show it in Bangladesh time whatever the server's zone.
+  const soldAt = new Date(`${sale.timestamp}Z`).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+
   return (
     <div className="space-y-6">
       <div className="print:hidden">
@@ -71,7 +74,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
         <PageHeader
           icon={Receipt}
           title={sale.receipt_number ?? `Sale #${sale.id}`}
-          description={new Date(sale.timestamp).toLocaleString()}
+          description={soldAt}
           action={<PrintButton />}
         />
       </div>
@@ -86,7 +89,7 @@ export default async function SaleReceiptPage({ params }: { params: Promise<{ id
           <dt className="text-muted-foreground">Receipt #</dt>
           <dd className="text-right text-foreground">{sale.receipt_number ?? `#${sale.id}`}</dd>
           <dt className="text-muted-foreground">Date/time</dt>
-          <dd className="text-right text-foreground">{new Date(sale.timestamp).toLocaleString()}</dd>
+          <dd className="text-right text-foreground">{soldAt}</dd>
           <dt className="text-muted-foreground">Branch</dt>
           <dd className="text-right text-foreground">{sale.branch?.name ?? "—"}</dd>
           <dt className="text-muted-foreground">Processed by</dt>
