@@ -1,5 +1,7 @@
 # Bangla Medical Hall
 
+[![CI](https://github.com/Samin-Zaman1/bangla-medical-hall/actions/workflows/ci.yml/badge.svg)](https://github.com/Samin-Zaman1/bangla-medical-hall/actions/workflows/ci.yml) [![Deploy](https://github.com/Samin-Zaman1/bangla-medical-hall/actions/workflows/deploy.yml/badge.svg)](https://github.com/Samin-Zaman1/bangla-medical-hall/actions/workflows/deploy.yml)
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 
 Web-based point-of-sale and inventory system for a single pharmacy shop in Bangladesh. Built with Next.js, PostgreSQL (Supabase), and Prisma.
@@ -56,6 +58,18 @@ Small pharmacies often run on paper: expiry dates are tracked by memory, custome
    ```
 
 Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to `/login`.
+
+## Testing & delivery
+
+```bash
+npm test               # unit + component + DB tests (no setup needed, ~10 s)
+npm run db:local:start # local Supabase in Docker, all migrations applied
+npm run test:e2e       # Playwright end-to-end suite against it
+```
+
+Every pull request runs lint, typecheck, all test layers and a full browser E2E run; merges to
+`master` are migrated, deployed to Vercel and smoke-tested automatically. See
+[docs/TESTING.md](docs/TESTING.md) and [docs/CI-CD.md](docs/CI-CD.md).
 
 ## Project structure
 

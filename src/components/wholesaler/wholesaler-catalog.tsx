@@ -111,6 +111,7 @@ export function WholesalerCatalog({ canOrder }: { canOrder: boolean }) {
         <Input
           type="text"
           placeholder="Search products…"
+          aria-label="Search products"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -146,6 +147,7 @@ export function WholesalerCatalog({ canOrder }: { canOrder: boolean }) {
                       type="number"
                       min="0"
                       placeholder="Qty"
+                      aria-label={`Quantity of ${product.generic_name}`}
                       disabled={outOfStock || product.wholesale_price == null}
                       value={cart[product.id] ?? ""}
                       onChange={(e) => setQuantity(product.id, Number(e.target.value))}
@@ -200,12 +202,18 @@ export function WholesalerCatalog({ canOrder }: { canOrder: boolean }) {
               {orderError}
             </p>
           )}
-          {orderSuccess && <p className="text-sm text-success">{orderSuccess}</p>}
 
           <Button type="button" onClick={handlePlaceOrder} disabled={submitting} className="w-full">
             {submitting ? "Placing order…" : "Place order"}
           </Button>
         </Card>
+      )}
+
+      {/* Outside the cart card: a successful order empties the cart, which unmounts the card. */}
+      {canOrder && orderSuccess && (
+        <p className="rounded-lg bg-success-soft px-4 py-3 text-sm text-success-soft-foreground" role="status">
+          {orderSuccess}
+        </p>
       )}
     </div>
   );

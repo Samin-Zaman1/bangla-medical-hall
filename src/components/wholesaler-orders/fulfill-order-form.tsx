@@ -55,6 +55,7 @@ export function FulfillOrderForm({ orderId, items }: { orderId: number; items: I
               type="number"
               min="0"
               max={item.quantity}
+              aria-label={`Quantity to release of ${item.product?.generic_name ?? `product #${item.product_id}`}`}
               value={quantities[item.id] ?? ""}
               onChange={(e) => setQuantities((prev) => ({ ...prev, [item.id]: e.target.value }))}
               className="w-24"

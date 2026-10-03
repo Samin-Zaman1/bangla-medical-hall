@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
 export function AddSupplierForm() {
+  const fieldId = useId();
   const router = useRouter();
   const [name, setName] = useState("");
   const [contactInfo, setContactInfo] = useState("");
@@ -46,18 +47,18 @@ export function AddSupplierForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label>Company name</Label>
-          <Input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Label htmlFor={`${fieldId}-company-name`}>Company name</Label>
+          <Input id={`${fieldId}-company-name`} type="text" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Contact info</Label>
-          <Input type="text" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} />
+          <Label htmlFor={`${fieldId}-contact-info`}>Contact info</Label>
+          <Input id={`${fieldId}-contact-info`} type="text" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Payment terms</Label>
-          <Input type="text" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
+          <Label htmlFor={`${fieldId}-payment-terms`}>Payment terms</Label>
+          <Input id={`${fieldId}-payment-terms`} type="text" value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
         </div>
       </div>
 

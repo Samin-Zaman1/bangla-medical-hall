@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
 
+// ws ships no type definitions, so a typed import would fail tsc; require keeps it `any`.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const ws = require("ws");
 (globalThis as typeof globalThis & { WebSocket: typeof ws.WebSocket }).WebSocket = ws.WebSocket;
 

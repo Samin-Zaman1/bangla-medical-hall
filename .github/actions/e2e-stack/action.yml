@@ -1,0 +1,45 @@
+name: E2E stack
+description: >
+  Starts the local Supabase stack with every migration applied, lints the database, installs
+  Playwright browsers (cached) and builds the app pointed at the local stack.
+inputs:
+  browsers:
+    description: Space-separated Playwright browsers to install
+    default: chromium
+runs:
+  using: composite
+  steps:
+    - name: Start Supabase (Postgres + PostgREST + Storage) and apply migrations
+      shell: bash
+      run: npx supabase start -x studio,imgproxy,postgres-meta,supavisor,mailpit,logflare,vector,realtime,edge-runtime,gotrue
+
+    - name: Lint database functions
+      shell: bash
+      run: npx supabase db lint --level warning --fail-on error
+
+    - name: Cache Playwright browsers
+      id: pw-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ inputs.browsers }}
+
+    - name: Install Playwright browsers
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npx playwright install --with-deps ${{ inputs.browsers }}
+
+    - name: Install Playwright system dependencies
+      if: steps.pw-cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: npx playwright install-deps ${{ inputs.browsers }}
+
+    # NEXT_PUBLIC_* values are inlined at build time, so the build must already point at the
+    # local stack. The key is derived at runtime, never committed (scripts/ci/local-supabase-env.mjs).
+    - name: Point the app at the local stack
+      shell: bash
+      run: node scripts/ci/local-supabase-env.mjs >> "$GITHUB_ENV"
+
+    - name: Build app
+      shell: bash
+      run: npm run build

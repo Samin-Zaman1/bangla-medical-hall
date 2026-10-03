@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -31,6 +31,7 @@ export function EditProductForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const fieldId = useId();
   const router = useRouter();
   const [genericName, setGenericName] = useState(product.generic_name);
   const [brandName, setBrandName] = useState(product.brand_name ?? "");
@@ -86,28 +87,28 @@ export function EditProductForm({
     <form onSubmit={handleSave} className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1">
-          <Label className="text-xs">Generic name</Label>
-          <Input value={genericName} onChange={(e) => setGenericName(e.target.value)} required className="h-8 text-sm" />
+          <Label htmlFor={`${fieldId}-generic-name`} className="text-xs">Generic name</Label>
+          <Input id={`${fieldId}-generic-name`} value={genericName} onChange={(e) => setGenericName(e.target.value)} required className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Brand name</Label>
-          <Input value={brandName} onChange={(e) => setBrandName(e.target.value)} className="h-8 text-sm" />
+          <Label htmlFor={`${fieldId}-brand-name`} className="text-xs">Brand name</Label>
+          <Input id={`${fieldId}-brand-name`} value={brandName} onChange={(e) => setBrandName(e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Manufacturer</Label>
-          <Input value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} className="h-8 text-sm" />
+          <Label htmlFor={`${fieldId}-manufacturer`} className="text-xs">Manufacturer</Label>
+          <Input id={`${fieldId}-manufacturer`} value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Form</Label>
-          <Input value={form} onChange={(e) => setForm(e.target.value)} className="h-8 text-sm" />
+          <Label htmlFor={`${fieldId}-form`} className="text-xs">Form</Label>
+          <Input id={`${fieldId}-form`} value={form} onChange={(e) => setForm(e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Strength</Label>
-          <Input value={strength} onChange={(e) => setStrength(e.target.value)} className="h-8 text-sm" />
+          <Label htmlFor={`${fieldId}-strength`} className="text-xs">Strength</Label>
+          <Input id={`${fieldId}-strength`} value={strength} onChange={(e) => setStrength(e.target.value)} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Reorder at</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-reorder-at`} className="text-xs">Reorder at</Label>
+          <Input id={`${fieldId}-reorder-at`}
             type="number"
             min="0"
             step="1"
@@ -118,8 +119,8 @@ export function EditProductForm({
         </div>
 
         <div className="space-y-1">
-          <Label className="text-xs">Sale price</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-sale-price`} className="text-xs">Sale price</Label>
+          <Input id={`${fieldId}-sale-price`}
             type="number"
             min="0"
             step="0.01"
@@ -131,8 +132,8 @@ export function EditProductForm({
           {!canEditSalePrice && <p className="text-[11px] text-muted-foreground">Owner only</p>}
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Wholesale price</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-wholesale-price`} className="text-xs">Wholesale price</Label>
+          <Input id={`${fieldId}-wholesale-price`}
             type="number"
             min="0"
             step="0.01"

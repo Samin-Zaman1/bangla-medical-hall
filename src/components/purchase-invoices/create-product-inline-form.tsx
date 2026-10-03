@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import type { ProductOption } from "./review-items-section";
@@ -16,6 +16,7 @@ export function CreateProductInlineForm({
   onCreated: (product: ProductOption) => void;
   onCancel: () => void;
 }) {
+  const fieldId = useId();
   const [genericName, setGenericName] = useState(initialName);
   const [salePrice, setSalePrice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,8 +50,8 @@ export function CreateProductInlineForm({
   return (
     <div className="max-w-sm space-y-2 rounded-lg border border-border bg-muted/40 p-3">
       <div className="space-y-1">
-        <Label className="text-xs">Generic name</Label>
-        <Input
+        <Label htmlFor={`${fieldId}-generic-name`} className="text-xs">Generic name</Label>
+        <Input id={`${fieldId}-generic-name`}
           type="text"
           value={genericName}
           onChange={(e) => setGenericName(e.target.value)}
@@ -58,8 +59,8 @@ export function CreateProductInlineForm({
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Sale price</Label>
-        <Input
+        <Label htmlFor={`${fieldId}-sale-price`} className="text-xs">Sale price</Label>
+        <Input id={`${fieldId}-sale-price`}
           type="number"
           min="0"
           step="0.01"
