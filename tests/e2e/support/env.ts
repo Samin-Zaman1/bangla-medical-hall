@@ -9,18 +9,20 @@
 
 import { localSupabaseEnv } from "../../../scripts/ci/local-supabase-env.mjs";
 
-// Derived from the Supabase CLI's default local JWT secret; see scripts/ci/local-supabase-env.mjs.
-const local = localSupabaseEnv();
-
 export const remoteTarget = process.env.E2E_BASE_URL;
+
+// Read from the running local stack (scripts/ci/local-supabase-env.mjs), only when no override
+// is set. Remote mode has no local stack, so it must never be asked.
+const local = <K extends keyof ReturnType<typeof localSupabaseEnv>>(key: K) =>
+  remoteTarget ? "" : localSupabaseEnv()[key];
 
 export const E2E = {
   port: 3100,
   baseURL: remoteTarget ?? "http://localhost:3100",
-  supabaseUrl: process.env.E2E_SUPABASE_URL ?? local.NEXT_PUBLIC_SUPABASE_URL,
-  serviceRoleKey: process.env.E2E_SUPABASE_SERVICE_ROLE_KEY ?? local.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseUrl: process.env.E2E_SUPABASE_URL ?? local("NEXT_PUBLIC_SUPABASE_URL"),
+  serviceRoleKey: process.env.E2E_SUPABASE_SERVICE_ROLE_KEY ?? local("SUPABASE_SERVICE_ROLE_KEY"),
   dbUrl: process.env.E2E_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
-  authSecret: process.env.E2E_AUTH_SECRET ?? local.AUTH_SECRET,
+  authSecret: process.env.E2E_AUTH_SECRET ?? local("AUTH_SECRET"),
 };
 
 /** Env for the Next server under test. Overrides anything in .env.local (process env wins). */

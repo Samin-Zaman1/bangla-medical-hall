@@ -35,7 +35,7 @@ runs:
       run: npx playwright install-deps ${{ inputs.browsers }}
 
     # NEXT_PUBLIC_* values are inlined at build time, so the build must already point at the
-    # local stack. The key is derived at runtime, never committed (scripts/ci/local-supabase-env.mjs).
+    # local stack. The key is read from `supabase status`, never committed (scripts/ci/local-supabase-env.mjs).
     - name: Point the app at the local stack
       shell: bash
       run: node scripts/ci/local-supabase-env.mjs >> "$GITHUB_ENV"
