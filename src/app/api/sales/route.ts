@@ -1,46 +1,42 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { requireAuth, requirePermission, isSessionUser } from "@/lib/auth/require-auth";
+import { requirePermission, isSessionUser } from "@/lib/auth/require-auth";
 
 const VALID_PAYMENT_METHODS = ["cash", "bkash", "nagad", "credit"];
+const MAX_ITEMS = 100;
 
-export async function GET() {
-  const authResult = await requireAuth();
-  if (!isSessionUser(authResult)) return authResult;
-
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("product")
-    .select("id, generic_name, sale_price")
-    .order("generic_name", { ascending: true });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ products: data ?? [] });
-}
+type SaleItemInput = { product_id: number; quantity: number };
 
 export async function POST(request: Request) {
   const authResult = await requirePermission("process_sale");
   if (!isSessionUser(authResult)) return authResult;
   const session = authResult;
 
-  let body: { productId?: unknown; quantity?: unknown; customerId?: unknown; paymentMethod?: unknown };
+  let body: { items?: unknown; customerId?: unknown; paymentMethod?: unknown; discountAmount?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const productId = Number(body.productId);
-  const quantity = Number(body.quantity);
-
-  if (!Number.isInteger(productId) || productId <= 0) {
-    return NextResponse.json({ error: "A valid productId is required" }, { status: 400 });
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    return NextResponse.json({ error: "Add at least one product to the bill" }, { status: 400 });
   }
-  if (!Number.isInteger(quantity) || quantity <= 0) {
-    return NextResponse.json({ error: "Quantity must be a positive integer" }, { status: 400 });
+  if (body.items.length > MAX_ITEMS) {
+    return NextResponse.json({ error: `A bill can have at most ${MAX_ITEMS} lines` }, { status: 400 });
+  }
+
+  const items: SaleItemInput[] = [];
+  for (const raw of body.items as { productId?: unknown; quantity?: unknown }[]) {
+    const productId = Number(raw?.productId);
+    const quantity = Number(raw?.quantity);
+    if (!Number.isInteger(productId) || productId <= 0) {
+      return NextResponse.json({ error: "Each item needs a valid productId" }, { status: 400 });
+    }
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return NextResponse.json({ error: "Quantity must be a positive integer" }, { status: 400 });
+    }
+    items.push({ product_id: productId, quantity });
   }
 
   const paymentMethod = body.paymentMethod ? String(body.paymentMethod) : "cash";
@@ -54,6 +50,19 @@ export async function POST(request: Request) {
       : null;
   if (customerId !== null && (!Number.isInteger(customerId) || customerId <= 0)) {
     return NextResponse.json({ error: "customerId must be a valid id" }, { status: 400 });
+  }
+
+  const discountAmount =
+    body.discountAmount === undefined || body.discountAmount === null || body.discountAmount === ""
+      ? 0
+      : Math.round(Number(body.discountAmount) * 100) / 100;
+  if (!Number.isFinite(discountAmount) || discountAmount < 0) {
+    return NextResponse.json({ error: "Discount must be zero or a positive amount" }, { status: 400 });
+  }
+
+  if (discountAmount > 0) {
+    const discountAuth = await requirePermission("apply_discount");
+    if (!isSessionUser(discountAuth)) return discountAuth;
   }
 
   // Credit is a bigger commitment than picking cash/bKash/Nagad — it puts the sale on a
@@ -70,10 +79,10 @@ export async function POST(request: Request) {
     .rpc("create_sale", {
       p_branch_id: session.branchId,
       p_user_id: session.id,
-      p_product_id: productId,
-      p_quantity: quantity,
+      p_items: items,
       p_customer_id: customerId,
       p_payment_method: paymentMethod,
+      p_discount_amount: discountAmount,
     })
     .single<{
       sale_id: number;
@@ -84,15 +93,13 @@ export async function POST(request: Request) {
 
   if (error) {
     const message = error.message;
-    const status = /product not found/i.test(message)
+    const status = /product not found|customer not found/i.test(message)
       ? 404
-      : /customer not found/i.test(message)
-        ? 404
-        : /insufficient stock/i.test(message)
-          ? 409
-          : /quantity must be|invalid payment method|customer is required/i.test(message)
-            ? 400
-            : 500;
+      : /insufficient stock/i.test(message)
+        ? 409
+        : /quantity must be|invalid payment method|customer is required|discount|at least one item/i.test(message)
+          ? 400
+          : 500;
     return NextResponse.json({ error: message }, { status });
   }
 

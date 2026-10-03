@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { hasPermission, type Permission } from "@/lib/permissions";
 
 const navItems: { href: string; label: string; permission?: Permission }[] = [
-  { href: "/sales", label: "Sales" },
+  { href: "/sales", label: "Make a Sale" },
   { href: "/inventory", label: "Inventory" },
   { href: "/products", label: "Products" },
   { href: "/purchases", label: "Stock In" },
