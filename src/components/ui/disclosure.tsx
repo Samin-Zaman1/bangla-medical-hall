@@ -19,6 +19,7 @@ export function Disclosure({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className="flex w-full items-center justify-between gap-2 px-5 py-3.5 text-left text-sm font-semibold text-foreground transition-colors hover:bg-muted/60"
       >
         {label}

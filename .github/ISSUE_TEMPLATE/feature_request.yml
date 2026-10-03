@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an improvement for the shop
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation at the counter, in stock-keeping, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who needs it?
+      multiple: true
+      options: [Owner, Staff, Wholesalers, Customers]

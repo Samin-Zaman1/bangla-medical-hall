@@ -1,0 +1,139 @@
+name: Deploy
+
+# Continuous delivery: every green CI run on master is released to production —
+#   migrate the Supabase database → deploy to Vercel → smoke-test the live site → roll back on failure.
+# Both the migrate and deploy jobs run in the "production" GitHub environment, so adding required
+# reviewers to that environment turns this into a one-click approval gate.
+# Each stage skips cleanly until its secrets exist (see docs/CI-CD.md).
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+# Never run two production releases at once, and never cancel one mid-flight.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Preflight
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      supabase: ${{ steps.secrets.outputs.supabase }}
+      vercel: ${{ steps.secrets.outputs.vercel }}
+    steps:
+      - id: sha
+        run: echo "sha=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+      - id: secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: |
+          supabase=false; vercel=false
+          [[ -n "$SUPABASE_ACCESS_TOKEN" && -n "$SUPABASE_DB_PASSWORD" && -n "$SUPABASE_PROJECT_REF" ]] && supabase=true
+          [[ -n "$VERCEL_TOKEN" && -n "$VERCEL_ORG_ID" && -n "$VERCEL_PROJECT_ID" ]] && vercel=true
+          echo "supabase=$supabase" >> "$GITHUB_OUTPUT"
+          echo "vercel=$vercel" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Release ${GITHUB_SHA::7}"
+            echo "- Database migrations: $([[ $supabase == true ]] && echo enabled || echo '**skipped** — Supabase secrets not configured')"
+            echo "- Vercel deploy: $([[ $vercel == true ]] && echo enabled || echo '**skipped** — Vercel secrets not configured')"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  migrate:
+    name: Migrate production database
+    needs: preflight
+    if: needs.preflight.outputs.supabase == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - uses: ./.github/actions/setup
+      - run: npx supabase link --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+      - name: Pending migrations
+        run: npx supabase db push --dry-run | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Apply migrations
+        run: npx supabase db push
+
+  deploy:
+    name: Deploy to Vercel
+    needs: [preflight, migrate]
+    # Runs after a successful migration, or when migrations are not configured (skipped).
+    if: always() && needs.preflight.outputs.vercel == 'true' && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    timeout-minutes: 15
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - uses: ./.github/actions/setup
+      - run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
+      - id: deploy
+        run: |
+          url=$(npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
+
+  smoke:
+    name: Smoke test production
+    needs: [preflight, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - uses: ./.github/actions/setup
+      - run: npx playwright install --with-deps chromium
+      - name: Read-only checks against the live site
+        env:
+          # Use the stable production domain when set; otherwise the deployment URL.
+          E2E_BASE_URL: ${{ vars.PRODUCTION_URL || needs.deploy.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npx playwright test --project=smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: playwright-report/
+          retention-days: 14
+      # The app is rolled back; migrations are not. Keep migrations backwards-compatible
+      # (expand → deploy → contract) so the previous build still works on the new schema.
+      - name: Roll back to the previous production deployment
+        if: failure()
+        run: |
+          npx --yes vercel@latest rollback --yes --token="$VERCEL_TOKEN"
+          echo "::error::Smoke tests failed — production was rolled back to the previous deployment."

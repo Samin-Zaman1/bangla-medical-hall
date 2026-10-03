@@ -1,0 +1,11 @@
+name: Setup
+description: Node + cached npm install, shared by every job.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+    - run: npm ci
+      shell: bash

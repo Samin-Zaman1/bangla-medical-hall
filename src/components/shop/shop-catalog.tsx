@@ -46,6 +46,7 @@ export function ShopCatalog() {
         <Input
           type="text"
           placeholder="Search products…"
+          aria-label="Search products"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
