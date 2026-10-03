@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Dhaka
+    open-pull-requests-limit: 5
+    # Batch the routine bumps so CI runs once per group, not once per package.
+    groups:
+      testing:
+        patterns: ["vitest", "@vitest/*", "@playwright/test", "@axe-core/*", "@testing-library/*", "jsdom", "@electric-sql/pglite"]
+      lint-and-types:
+        patterns: ["eslint*", "@types/*", "typescript"]
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Framework majors (Next, React, Prisma, Supabase) need a human read of the changelog.
+    ignore:
+      - dependency-name: next
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react-dom
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: prisma
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Dhaka
+    groups:
+      actions:
+        patterns: ["*"]

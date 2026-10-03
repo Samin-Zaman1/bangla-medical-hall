@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { hasPermission, type Permission } from "@/lib/permissions";
 
 const navItems: { href: string; label: string; permission?: Permission }[] = [
-  { href: "/sales", label: "Sales" },
+  { href: "/sales", label: "Make a Sale" },
   { href: "/inventory", label: "Inventory" },
   { href: "/products", label: "Products" },
   { href: "/purchases", label: "Stock In" },
@@ -31,9 +31,9 @@ export default async function DashboardLayout({
   );
 
   return (
-    <div className="flex min-h-full flex-1 bg-background">
+    <div className="flex min-h-full flex-1 flex-col bg-background md:flex-row">
       <Sidebar navItems={visibleNav} user={{ name: session.name, role: session.role }} />
-      <main className="flex-1 p-6">{children}</main>
+      <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
     </div>
   );
 }

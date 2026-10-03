@@ -46,21 +46,20 @@ function getSecretKey(): Uint8Array | null {
   return new TextEncoder().encode(secret);
 }
 
+// Both session checks look at claims, not just the signature: staff and wholesaler tokens share
+// AUTH_SECRET, so either kind verifies against it. A staff token has an owner/staff `role` and
+// no `type`; a wholesaler token has `type: "wholesaler"`.
 async function isValidSession(token: string): Promise<boolean> {
   const secret = getSecretKey();
   if (!secret) return false;
   try {
-    await jwtVerify(token, secret);
-    return true;
+    const { payload } = await jwtVerify(token, secret);
+    return payload.type === undefined && (payload.role === "owner" || payload.role === "staff");
   } catch {
     return false;
   }
 }
 
-// Unlike isValidSession above, this checks the payload's discriminant claim, not just the
-// signature. It has to: staff and wholesaler tokens share AUTH_SECRET, so a staff-issued token
-// would verify successfully here too if only the signature were checked — the `type` claim is
-// the only thing that actually distinguishes them at this coarse edge-check layer.
 async function isValidWholesalerSession(token: string): Promise<boolean> {
   const secret = getSecretKey();
   if (!secret) return false;
