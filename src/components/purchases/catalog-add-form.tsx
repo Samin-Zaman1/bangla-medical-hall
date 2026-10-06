@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Label } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Input, Select, Label } from "@/components/ui/input";
 type ProductOption = { id: number; generic_name: string };
 
 export function CatalogAddForm({ supplierId }: { supplierId: number }) {
+  const fieldId = useId();
   const router = useRouter();
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [productId, setProductId] = useState("");
@@ -49,8 +50,8 @@ export function CatalogAddForm({ supplierId }: { supplierId: number }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div className="w-56 space-y-1.5">
-        <Label>Product</Label>
-        <Select value={productId} onChange={(e) => setProductId(e.target.value)} required>
+        <Label htmlFor={`${fieldId}-product`}>Product</Label>
+        <Select id={`${fieldId}-product`} value={productId} onChange={(e) => setProductId(e.target.value)} required>
           <option value="">Select product</option>
           {products.map((product) => (
             <option key={product.id} value={product.id}>
@@ -61,8 +62,8 @@ export function CatalogAddForm({ supplierId }: { supplierId: number }) {
       </div>
 
       <div className="w-32 space-y-1.5">
-        <Label>Cost price</Label>
-        <Input type="number" min="0" step="0.01" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
+        <Label htmlFor={`${fieldId}-cost-price`}>Cost price</Label>
+        <Input id={`${fieldId}-cost-price`} type="number" min="0" step="0.01" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} />
       </div>
 
       <Button type="submit" disabled={loading || !productId}>

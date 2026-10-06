@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select, Label } from "@/components/ui/input";
@@ -10,6 +10,7 @@ type CustomerOption = { id: number; name: string };
 type CartLine = { productId: number; genericName: string; quantity: number; unitPrice: number };
 
 export function WholesaleOrderForm() {
+  const fieldId = useId();
   const router = useRouter();
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
@@ -99,8 +100,8 @@ export function WholesaleOrderForm() {
       <h2 className="text-sm font-semibold text-foreground">New wholesale order</h2>
 
       <div className="space-y-1.5">
-        <Label>Customer</Label>
-        <Select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="md:w-64">
+        <Label htmlFor={`${fieldId}-customer`}>Customer</Label>
+        <Select id={`${fieldId}-customer`} value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="md:w-64">
           <option value="">Walk-in / no customer</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
@@ -112,8 +113,8 @@ export function WholesaleOrderForm() {
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="w-56 space-y-1.5">
-          <Label>Add product</Label>
-          <Select value={productToAdd} onChange={(e) => setProductToAdd(e.target.value)}>
+          <Label htmlFor={`${fieldId}-add-product`}>Add product</Label>
+          <Select id={`${fieldId}-add-product`} value={productToAdd} onChange={(e) => setProductToAdd(e.target.value)}>
             <option value="">Select product</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
 export function AddCustomerForm() {
+  const fieldId = useId();
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -42,18 +43,18 @@ export function AddCustomerForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label>Name</Label>
-          <Input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Label htmlFor={`${fieldId}-name`}>Name</Label>
+          <Input id={`${fieldId}-name`} type="text" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Phone</Label>
-          <Input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Label htmlFor={`${fieldId}-phone`}>Phone</Label>
+          <Input id={`${fieldId}-phone`} type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Address</Label>
-          <Input type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <Label htmlFor={`${fieldId}-address`}>Address</Label>
+          <Input id={`${fieldId}-address`} type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
         </div>
       </div>
 

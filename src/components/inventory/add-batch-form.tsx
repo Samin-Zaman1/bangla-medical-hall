@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Label } from "@/components/ui/input";
@@ -11,6 +11,7 @@ type ProductOption = {
 };
 
 export function AddBatchForm() {
+  const fieldId = useId();
   const router = useRouter();
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [productId, setProductId] = useState("");
@@ -68,8 +69,8 @@ export function AddBatchForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1.5">
-          <Label>Product</Label>
-          <Select value={productId} onChange={(e) => setProductId(e.target.value)} required>
+          <Label htmlFor={`${fieldId}-product`}>Product</Label>
+          <Select id={`${fieldId}-product`} value={productId} onChange={(e) => setProductId(e.target.value)} required>
             <option value="">Select product</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
@@ -80,23 +81,23 @@ export function AddBatchForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label>Quantity</Label>
-          <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+          <Label htmlFor={`${fieldId}-quantity`}>Quantity</Label>
+          <Input id={`${fieldId}-quantity`} type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Expiry date</Label>
-          <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+          <Label htmlFor={`${fieldId}-expiry-date`}>Expiry date</Label>
+          <Input id={`${fieldId}-expiry-date`} type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Batch number</Label>
-          <Input type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+          <Label htmlFor={`${fieldId}-batch-number`}>Batch number</Label>
+          <Input id={`${fieldId}-batch-number`} type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Cost price</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-cost-price`}>Cost price</Label>
+          <Input id={`${fieldId}-cost-price`}
             type="number"
             min="0"
             step="0.01"
