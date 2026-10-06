@@ -1,0 +1,6 @@
+# Reviews are requested from these owners automatically.
+*                      @Samin-Zaman1
+
+# Changes here touch production data or the release pipeline — always need an owner review.
+/supabase/migrations/  @Samin-Zaman1
+/.github/              @Samin-Zaman1
