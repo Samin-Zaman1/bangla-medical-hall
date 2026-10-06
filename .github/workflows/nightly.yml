@@ -1,0 +1,73 @@
+name: Nightly
+
+# The full matrix PRs skip for speed: every E2E test on Chromium, Firefox and WebKit, plus a
+# dependency audit. Failures open (or update) a tracking issue so they don't go unnoticed.
+
+on:
+  schedule:
+    - cron: "30 21 * * *" # 03:30 Asia/Dhaka
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  e2e-all-browsers:
+    name: E2E — ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/e2e-stack
+        with:
+          browsers: ${{ matrix.browser }}
+      - run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          E2E_BROWSERS: all
+          # WebKit drops Secure cookies on http://localhost, so it runs against `next dev`
+          # (non-Secure cookies) instead of the production build. See playwright.config.ts.
+          E2E_DEV_SERVER: ${{ matrix.browser == 'webkit' && '1' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-report-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 14
+      - if: always()
+        run: npx supabase stop --no-backup
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: npm audit (production dependencies, high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+  report:
+    name: Report failures
+    needs: [e2e-all-browsers, audit]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly build failing"
+          existing=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body "Still failing on $(date -u +%F): $RUN_URL"
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "The nightly run failed: $RUN_URL"
+          fi
