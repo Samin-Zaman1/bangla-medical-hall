@@ -45,12 +45,9 @@ test.describe("staff", () => {
     await expect(page.getByRole("columnheader", { name: "Adjust" })).toHaveCount(0);
   });
 
-  // KNOWN GAP: the Reports link is hidden from staff but the page itself has no permission
-  // check, so typing /reports works. Harmless while it's a placeholder; must be fixed before
-  // real figures land there. Flip test.fail → test once the page redirects/forbids staff.
-  test.fail("cannot open /reports directly", async ({ page }) => {
-    const response = await page.goto("/reports");
-    const blocked = response?.status() === 403 || !new URL(page.url()).pathname.startsWith("/reports");
-    expect(blocked, "staff reached /reports").toBe(true);
+  // Hiding the link isn't enough; the page itself must turn staff away.
+  test("cannot open /reports directly", async ({ page }) => {
+    await page.goto("/reports");
+    await expect(page).toHaveURL(/\/sales$/);
   });
 });

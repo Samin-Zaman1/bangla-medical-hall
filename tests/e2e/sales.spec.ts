@@ -12,11 +12,7 @@ async function addToBill(page: Page, productName: string) {
 test.describe("cashier (staff)", () => {
   test.use({ storageState: STAFF_STATE });
 
-  test("rings up a multi-item cash sale with a discount and change @mobile", async ({ page, data }, testInfo) => {
-    // KNOWN BUG: the dashboard sidebar is a fixed 256px column with no phone layout, so on a
-    // narrow screen the page scrolls sideways and the sidebar intercepts taps on products.
-    // Remove this once the layout is responsive — the test will then report an unexpected pass.
-    test.fail(testInfo.project.name === "mobile", "Dashboard layout is not responsive on phones");
+  test("rings up a multi-item cash sale with a discount and change @mobile", async ({ page, data }) => {
     const napa = await data.product({ price: 2.5, stock: 40 });
     const seclo = await data.product({ price: 7, stock: 10 });
 
