@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
 export function AddProductForm() {
+  const fieldId = useId();
   const router = useRouter();
   const [genericName, setGenericName] = useState("");
   const [brandName, setBrandName] = useState("");
@@ -64,28 +65,28 @@ export function AddProductForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1.5">
-          <Label>Generic name</Label>
-          <Input type="text" value={genericName} onChange={(e) => setGenericName(e.target.value)} required />
+          <Label htmlFor={`${fieldId}-generic-name`}>Generic name</Label>
+          <Input id={`${fieldId}-generic-name`} type="text" value={genericName} onChange={(e) => setGenericName(e.target.value)} required />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Brand name</Label>
-          <Input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} />
+          <Label htmlFor={`${fieldId}-brand-name`}>Brand name</Label>
+          <Input id={`${fieldId}-brand-name`} type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Form</Label>
-          <Input type="text" placeholder="Tablet, Syrup…" value={form} onChange={(e) => setForm(e.target.value)} />
+          <Label htmlFor={`${fieldId}-form`}>Form</Label>
+          <Input id={`${fieldId}-form`} type="text" placeholder="Tablet, Syrup…" value={form} onChange={(e) => setForm(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Strength</Label>
-          <Input type="text" placeholder="500mg" value={strength} onChange={(e) => setStrength(e.target.value)} />
+          <Label htmlFor={`${fieldId}-strength`}>Strength</Label>
+          <Input id={`${fieldId}-strength`} type="text" placeholder="500mg" value={strength} onChange={(e) => setStrength(e.target.value)} />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Sale price</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-sale-price`}>Sale price</Label>
+          <Input id={`${fieldId}-sale-price`}
             type="number"
             min="0"
             step="0.01"
@@ -96,8 +97,8 @@ export function AddProductForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label>Wholesale price</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-wholesale-price`}>Wholesale price</Label>
+          <Input id={`${fieldId}-wholesale-price`}
             type="number"
             min="0"
             step="0.01"
@@ -108,8 +109,8 @@ export function AddProductForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label>Reorder at</Label>
-          <Input
+          <Label htmlFor={`${fieldId}-reorder-at`}>Reorder at</Label>
+          <Input id={`${fieldId}-reorder-at`}
             type="number"
             min="0"
             step="1"
