@@ -15,7 +15,7 @@ export default defineConfig({
       provider: "v8",
       reportOnFailure: true,
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.d.ts", "src/Images/**"],
+      exclude: ["src/**/*.d.ts"],
     },
     projects: [
       {
