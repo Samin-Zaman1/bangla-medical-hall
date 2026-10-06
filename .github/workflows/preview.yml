@@ -1,0 +1,71 @@
+name: Preview
+
+# A Vercel preview deployment per pull request, smoke-tested and linked in a PR comment.
+# Preview deployments use Vercel's "Preview" environment variables — point those at a staging
+# Supabase project, never production (see docs/CI-CD.md).
+
+on:
+  pull_request:
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Deploy preview
+    # Secrets are unavailable to forks, and the job needs them.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check Vercel is configured
+        id: enabled
+        run: |
+          if [[ -n "$VERCEL_TOKEN" && -n "$VERCEL_ORG_ID" && -n "$VERCEL_PROJECT_ID" ]]; then
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Vercel secrets not configured — skipping preview." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.enabled.outputs.on
+      - uses: ./.github/actions/setup
+        if: steps.enabled.outputs.on
+      - if: steps.enabled.outputs.on
+        run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - if: steps.enabled.outputs.on
+        run: npx --yes vercel@latest build --token="$VERCEL_TOKEN"
+      - id: deploy
+        if: steps.enabled.outputs.on
+        run: echo "url=$(npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN")" >> "$GITHUB_OUTPUT"
+      - if: steps.enabled.outputs.on
+        run: npx playwright install --with-deps chromium
+      - name: Smoke test the preview
+        if: steps.enabled.outputs.on
+        env:
+          E2E_BASE_URL: ${{ steps.deploy.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npx playwright test --project=smoke
+      - name: Comment the preview URL on the PR
+        if: steps.enabled.outputs.on
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          body="**Preview:** $URL (commit ${GITHUB_SHA::7}, smoke tests passed)"
+          # Update our previous comment instead of piling up a new one per push.
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/${{ github.event.pull_request.number }}/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("**Preview:**")))][0].id // empty')
+          if [[ -n "$id" ]]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body"
+          else
+            gh pr comment ${{ github.event.pull_request.number }} --body "$body"
+          fi
