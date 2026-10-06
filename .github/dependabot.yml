@@ -15,17 +15,10 @@ updates:
         patterns: ["eslint*", "@types/*", "typescript"]
       minor-and-patch:
         update-types: [minor, patch]
-    # Framework majors (Next, React, Prisma, Supabase) need a human read of the changelog.
+    # Majors need a human read of the changelog (and @types/node must track the Node
+    # version in .nvmrc), so they're upgraded by hand rather than by Dependabot.
     ignore:
-      - dependency-name: next
-        update-types: ["version-update:semver-major"]
-      - dependency-name: react
-        update-types: ["version-update:semver-major"]
-      - dependency-name: react-dom
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@prisma/client"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: prisma
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
