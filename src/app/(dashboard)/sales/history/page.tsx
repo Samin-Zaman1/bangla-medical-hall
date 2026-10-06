@@ -21,8 +21,16 @@ type SaleRow = {
   customer: { name: string } | null;
 };
 
+// Dates in the filter are Bangladesh calendar days. sale.timestamp is a naive UTC timestamp
+// (Postgres now() on Supabase), so each day's bounds are Dhaka midnight expressed in UTC.
 function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka" }).format(new Date());
+}
+
+function dhakaMidnightUtc(date: string, addDays = 0): string {
+  const midnight = new Date(`${date}T00:00:00+06:00`);
+  midnight.setUTCDate(midnight.getUTCDate() + addDays);
+  return midnight.toISOString().slice(0, 19);
 }
 
 function paymentBadge(method: string | null) {
@@ -32,17 +40,14 @@ function paymentBadge(method: string | null) {
 
 async function getSales(branchId: number, from: string, to: string): Promise<SaleRow[]> {
   const supabase = getSupabaseAdmin();
-  const toExclusive = new Date(`${to}T00:00:00`);
-  toExclusive.setDate(toExclusive.getDate() + 1);
-
   const { data, error } = await supabase
     .from("sale")
     .select(
       "id, timestamp, total_amount, payment_method, receipt_number, branch(name), processed_by:app_user!user_id(name), customer(name)",
     )
     .eq("branch_id", branchId)
-    .gte("timestamp", `${from}T00:00:00`)
-    .lt("timestamp", toExclusive.toISOString().slice(0, 19))
+    .gte("timestamp", dhakaMidnightUtc(from))
+    .lt("timestamp", dhakaMidnightUtc(to, 1))
     .order("timestamp", { ascending: false });
 
   if (error) return [];
@@ -110,7 +115,7 @@ export default async function SalesHistoryPage({
               {sales.map((sale) => (
                 <tr key={sale.id} className="border-b border-border/60 transition-colors last:border-0 hover:bg-muted/50">
                   <td className="px-3 py-2.5 text-muted-foreground">
-                    {new Date(sale.timestamp).toLocaleString()}
+                    {new Date(`${sale.timestamp}Z`).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}
                   </td>
                   <td className="px-3 py-2.5">
                     <Link

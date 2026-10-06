@@ -53,11 +53,8 @@ describe("proxy: staff area", () => {
     expect((await run("/inventory", { wholesaler: true })).status).toBe(307);
   });
 
-  // KNOWN GAP: isValidSession in src/proxy.ts only checks the signature, and both token types
-  // share AUTH_SECRET, so this currently passes the proxy. Not exploitable today — the dashboard
-  // layout and every API handler re-verify with getSession(), which rejects it — but the proxy
-  // should check the claims too. Once it does, this starts "failing": change it.fails to it.
-  it.fails("does not accept a wholesaler token copied into the staff cookie", async () => {
+  // Both token types share AUTH_SECRET, so the signature alone can't tell them apart.
+  it("does not accept a wholesaler token copied into the staff cookie", async () => {
     const token = await createWholesalerToken(WHOLESALER);
     expect((await run("/inventory", { cookie: `${SESSION_COOKIE}=${token}` })).status).toBe(307);
     expect((await run("/api/products", { cookie: `${SESSION_COOKIE}=${token}` })).status).toBe(401);

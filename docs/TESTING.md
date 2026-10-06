@@ -56,15 +56,19 @@ Smoke against any deployed URL: `E2E_BASE_URL=https://your-site npx playwright t
   just on screen.
 - Use `appAlert(page)` for error messages (Next.js renders its own hidden `role="alert"`).
 
-## Known issues tracked by tests
+## Known issues
 
-These are real bugs, written as `test.fail` / `it.fails` so CI stays green while they're open.
-When one is fixed, its test starts **failing** ("expected to fail but passed") — that's the cue to
-turn it into a normal test.
+A bug found but not yet fixed is written as `test.fail` / `it.fails`, so CI stays green while it's
+open. Once it's fixed the test starts **failing** ("expected to fail but passed"); that's the cue to
+turn it into a normal test. There are none open right now.
 
-| Issue | Test |
+Bugs the suite has caught and that are now fixed, each guarded by its test:
+
+| Bug | Test |
 | --- | --- |
-| Dashboard isn't responsive: on phones the sidebar covers the till | `tests/e2e/sales.spec.ts` (mobile project) |
-| Brand green `#059669` is 3.76:1 on white (AA needs 4.5:1) | `tests/e2e/a11y.spec.ts` |
-| `/reports` has no page-level permission check | `tests/e2e/permissions.spec.ts` |
-| Proxy accepts a wholesaler token in the staff cookie (handlers still reject it) | `tests/unit/proxy.test.ts` |
+| Dashboard wasn't responsive: on phones the sidebar covered the till | `tests/e2e/sales.spec.ts` (mobile project) |
+| Brand green `#059669` (3.76:1) and warning amber `#d97706` (3.04:1) failed WCAG AA contrast | `tests/e2e/a11y.spec.ts` |
+| Sales history used UTC days: between midnight and 6 am in Dhaka, today's sales were missing | `tests/e2e/sales.spec.ts` |
+| Staff could open `/reports` by typing the URL | `tests/e2e/permissions.spec.ts` |
+| Proxy accepted a wholesaler token in the staff cookie | `tests/unit/proxy.test.ts` |
+| Wholesaler order confirmation vanished along with the emptied cart | `tests/e2e/wholesaler.spec.ts` |
