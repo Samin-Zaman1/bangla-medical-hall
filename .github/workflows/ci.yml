@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: npm run lint
       - run: npm run typecheck
@@ -33,14 +33,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Vitest (unit + components + PGlite migrations/RPCs)
         run: npx vitest run --coverage --coverage.reporter=text-summary --coverage.reporter=json-summary --coverage.reporter=html --reporter=default --reporter=junit --outputFile.junit=test-results/vitest/junit.xml
       - name: Coverage summary
         if: always()
         run: node scripts/ci/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: vitest-results
@@ -54,18 +54,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/e2e-stack
       - name: Playwright — desktop Chromium, phone viewport, smoke
         run: npx playwright test --project=chromium --project=mobile --project=smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-traces
