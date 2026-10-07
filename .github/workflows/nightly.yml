@@ -29,7 +29,8 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/e2e-stack
         with:
-          browsers: ${{ matrix.browser }}
+          # The auth setup project always signs in with Chromium, so every leg needs it too.
+          browsers: ${{ matrix.browser == 'chromium' && 'chromium' || format('chromium {0}', matrix.browser) }}
       - run: npx playwright test --project=${{ matrix.browser }}
         env:
           E2E_BROWSERS: all
