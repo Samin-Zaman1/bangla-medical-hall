@@ -20,7 +20,7 @@ layer on each pull request and smoke-tests each production release, rolling back
 **CI/CD** ([docs/CI-CD.md](docs/CI-CD.md)): every pull request runs lint, typecheck, all test
 layers and the browser suite against a production build, plus CodeQL and a Vercel preview. Merging
 to `main` migrates the database, deploys, smoke-tests the live site and rolls back automatically
-if the smoke tests fail. A nightly run repeats the E2E suite on Chromium, Firefox and WebKit.
+if the smoke tests fail. A manual Cross-browser run repeats the E2E suite on Chromium, Firefox and WebKit.
 
 **Defects found by the suite** (fixed):
 
@@ -133,7 +133,7 @@ supabase/migrations/           # Schema and plpgsql business logic, applied in o
 tests/
 ├── unit/  components/  db/    # Vitest projects
 └── e2e/                       # Playwright specs, fixtures, seed data
-.github/workflows/             # CI, deploy, preview, nightly, CodeQL
+.github/workflows/             # CI, deploy, preview, cross-browser (manual), CodeQL
 docs/                          # Testing guide, CI/CD runbook
 ```
 
