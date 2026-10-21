@@ -4,7 +4,7 @@ import { E2E, appServerEnv, remoteTarget } from "./tests/e2e/support/env";
 const CI = !!process.env.CI;
 
 // Desktop Chromium + a phone viewport on every run; Firefox and WebKit join when
-// E2E_BROWSERS=all (the nightly workflow), since they double the runtime.
+// E2E_BROWSERS=all (the manual Cross-browser workflow), since they double the runtime.
 const browsers: Project[] = [
   { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   { name: "mobile", use: { ...devices["Pixel 7"] }, grep: /@mobile/ },

@@ -38,7 +38,7 @@ npm run db:local:stop
 | `chromium` | Every spec | Every PR |
 | `mobile` | `@mobile`-tagged specs on a Pixel 7 viewport | Every PR |
 | `smoke` | Read-only checks, safe against production | Every PR, and after every deploy |
-| `firefox`, `webkit` | Every spec | Nightly (`E2E_BROWSERS=all`) |
+| `firefox`, `webkit` | Every spec | On demand: Cross-browser workflow (`E2E_BROWSERS=all`) |
 
 Smoke against any deployed URL: `E2E_BASE_URL=https://your-site npx playwright test --project=smoke`.
 
