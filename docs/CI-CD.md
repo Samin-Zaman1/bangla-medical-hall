@@ -12,7 +12,7 @@
                                       ├ Deploy to Vercel        (environment: production)
                                       └ Smoke test live site ──(fail)──► automatic rollback
 
- every night ──► Nightly: all E2E on Chromium + Firefox + WebKit, npm audit → issue on failure
+ on demand   ──► Cross-browser: all E2E on Chromium + Firefox + WebKit, npm audit
  every week  ──► Dependabot (grouped npm + Actions updates), CodeQL
 ```
 
@@ -21,7 +21,7 @@
 | CI | `.github/workflows/ci.yml` |
 | Deploy (CD) | `.github/workflows/deploy.yml` |
 | PR previews | `.github/workflows/preview.yml` |
-| Nightly | `.github/workflows/nightly.yml` |
+| Cross-browser (manual) | `.github/workflows/nightly.yml` |
 | CodeQL | `.github/workflows/codeql.yml` |
 
 CI needs no secrets. Deploy and Preview **skip themselves** until the secrets below exist, so the

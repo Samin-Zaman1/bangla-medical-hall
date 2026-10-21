@@ -1,16 +1,13 @@
-name: Nightly
+name: Cross-browser
 
 # The full matrix PRs skip for speed: every E2E test on Chromium, Firefox and WebKit, plus a
-# dependency audit. Failures open (or update) a tracking issue so they don't go unnoticed.
+# dependency audit. Manual only (Actions → Cross-browser → Run workflow), e.g. before a release.
 
 on:
-  schedule:
-    - cron: "30 21 * * *" # 03:30 Asia/Dhaka
   workflow_dispatch:
 
 permissions:
   contents: read
-  issues: write
 
 env:
   NEXT_TELEMETRY_DISABLED: 1
@@ -29,7 +26,9 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/e2e-stack
         with:
-          browsers: ${{ matrix.browser }}
+          # The `setup` project signs in with Chromium before any browser project runs,
+          # so Chromium is needed alongside the browser under test.
+          browsers: ${{ matrix.browser == 'chromium' && 'chromium' || format('chromium {0}', matrix.browser) }}
       - run: npx playwright test --project=${{ matrix.browser }}
         env:
           E2E_BROWSERS: all
@@ -39,7 +38,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: nightly-report-${{ matrix.browser }}
+          name: cross-browser-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 14
       - if: always()
@@ -53,21 +52,3 @@ jobs:
       - uses: ./.github/actions/setup
       - name: npm audit (production dependencies, high and above)
         run: npm audit --omit=dev --audit-level=high
-
-  report:
-    name: Report failures
-    needs: [e2e-all-browsers, audit]
-    if: failure() && github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    steps:
-      - env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          title="Nightly build failing"
-          existing=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
-          if [[ -n "$existing" ]]; then
-            gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body "Still failing on $(date -u +%F): $RUN_URL"
-          else
-            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "The nightly run failed: $RUN_URL"
-          fi
