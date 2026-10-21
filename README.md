@@ -4,24 +4,38 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white) ![Playwright](https://img.shields.io/badge/E2E-Playwright-2EAD33?logo=playwright&logoColor=white) ![Vitest](https://img.shields.io/badge/Tests-Vitest-6E9F18?logo=vitest&logoColor=white)
 
-Point-of-sale and inventory system for a neighbourhood pharmacy in Bangladesh: billing, batch-level
-stock with expiry tracking, customer credit (*baki*), supplier purchasing with AI invoice reading,
-and a self-service portal for wholesale buyers.
+Point-of-sale and inventory system for a pharmacy in Bangladesh, tested at four layers: ~300
+automated tests (unit, component, database and Playwright E2E), with a pipeline that runs every
+layer on each pull request and smoke-tests each production release, rolling back on failure.
 
-Built end to end: product design, a Postgres data model with transactional business logic,
-a Next.js app, ~300 automated tests, and a CI/CD pipeline that tests, migrates, deploys and
-smoke-tests every release.
+## Testing
+
+| Layer | Tool | Tests | What it covers |
+| --- | --- | --- | --- |
+| Unit | Vitest | 171 | Permission matrix, session tokens, proxy rules, API validation and error → HTTP status mapping |
+| Component | Testing Library | 17 | Till behaviour: cart maths, stock limits, discount/credit rules, double-submit protection |
+| Database | PGlite | 62 | Every migration applied to an in-process Postgres; sales, stock, credit and order functions exercised for real, including rollbacks, branch isolation and RLS |
+| End to end | Playwright | 44 + 5 smoke | Real browser → real app → real Supabase in Docker: selling, credit, stock, wholesale ordering, role boundaries over HTTP, accessibility (axe) |
+
+**CI/CD** ([docs/CI-CD.md](docs/CI-CD.md)): every pull request runs lint, typecheck, all test
+layers and the browser suite against a production build, plus CodeQL and a Vercel preview. Merging
+to `main` migrates the database, deploys, smoke-tests the live site and rolls back automatically
+if the smoke tests fail. A nightly run repeats the E2E suite on Chromium, Firefox and WebKit.
+
+**Defects found by the suite** (fixed):
+
+- The wholesaler table had no row level security, so the *public* anon key could read account
+  emails and password hashes. Fixed in migration 015, with a test that every table is locked down.
+- Wholesalers never saw their order confirmation: it rendered inside the cart, which emptied on success.
+- 32 form labels weren't linked to their inputs, breaking screen readers.
+
+Open defects are tracked as expected-failure tests, so they stay visible and can't silently regress
+([list](docs/TESTING.md#known-issues-tracked-by-tests)). Strategy and how to run each layer:
+[docs/TESTING.md](docs/TESTING.md).
 
 ![Point of sale](docs/images/point-of-sale.png)
 
-## The problem
-
-Small pharmacies often run on paper: expiry dates are tracked by memory, customer credit lives in
-a notebook, and the owner can't see what's selling without counting shelves. This app replaces
-that with a system built around how the shop actually works — fast at the counter, strict about
-stock and money.
-
-## Features
+## Functionality under test
 
 - **Point of sale**: search-as-you-type with keyboard shortcuts, multi-item bills, discounts, cash change, bKash/Nagad/credit payments, printable receipts
 - **Batch-level inventory**: stock tracked per batch so expiry and cost stay accurate; sales consume earliest-expiry stock first (FEFO); low-stock and expiring-soon alerts
@@ -83,30 +97,6 @@ Key decisions:
   treated as untrusted input.
 - **Supabase over HTTPS.** The shop's network blocks direct Postgres ports, so all data access
   goes through the Supabase client on port 443 (see `PROJECT_SPEC.md`).
-
-## Engineering & quality
-
-| Layer | Tool | Tests | What it proves |
-| --- | --- | --- | --- |
-| Unit | Vitest | 171 | Permission matrix, session tokens, proxy rules, API validation and error → HTTP status mapping |
-| Component | Testing Library | 17 | Till behaviour: cart maths, stock limits, discount/credit rules, double-submit protection |
-| Database | PGlite | 62 | Every migration applied to an in-process Postgres; sales, stock, credit and order functions exercised for real, including rollbacks, branch isolation and RLS |
-| End to end | Playwright | 44 + 5 smoke | Real browser → real app → real Supabase in Docker: selling, credit, stock, wholesale ordering, role boundaries over HTTP, accessibility (axe) |
-
-**CI/CD** ([docs/CI-CD.md](docs/CI-CD.md)) — every pull request runs lint, typecheck, all test
-layers and the browser suite against a production build, plus CodeQL and a Vercel preview. Merging
-to `main` migrates the database, deploys, smoke-tests the live site and rolls back automatically
-if the smoke tests fail. A nightly run repeats the E2E suite on Chromium, Firefox and WebKit.
-
-**Bugs the tests caught** — writing the suite surfaced real defects, now fixed:
-
-- The wholesaler table had no row level security, so the *public* anon key could read account
-  emails and password hashes. Fixed in migration 015, with a test that every table is locked down.
-- Wholesalers never saw their order confirmation: it rendered inside the cart, which emptied on success.
-- 32 form labels weren't linked to their inputs, breaking screen readers.
-
-Open issues are tracked as expected-failure tests, so they're visible and can't silently regress
-([list](docs/TESTING.md#known-issues-tracked-by-tests)).
 
 ## Running locally
 
